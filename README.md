@@ -79,14 +79,6 @@ MAX_CONTEXT_TOKENS=200000
 PORT=9000
 GOOGLE_SITE_VERIFICATION=GOOGLE_VERIFICATION_TOKEN_HERE
 ```
-
-### Getting a Gemini API Key
-
-1. Go to [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. Sign in with your Google account
-3. Create a new API key (free tier)
-4. Copy the key to your `.env` file
-
 ## Running the Application
 
 ### Development Mode
