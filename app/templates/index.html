@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexCode - AI Coding Assistant</title>
+    <meta name="description" content="NexCode is a production-grade AI coding assistant with speech-to-text dictation and live code preview.">
+    <meta name="keywords" content="AI coding assistant, code analysis, speech to text, live code preview">
+    <meta name="author" content="NexCode">
+    
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-tertiary: #e8eaed;
+            --bg-panel: #ffffff;
+            --text-primary: #202124;
+            --text-secondary: #5f6368;
+            --text-muted: #9aa0a6;
+            --border-color: #dadce0;
+            --accent-blue: #1a73e8;
+            --accent-blue-hover: #1557b0;
+            --accent-green: #34a853;
+            --accent-red: #ea4335;
+            --accent-yellow: #fbbc04;
+            --shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+            --shadow-hover: 0 1px 3px 0 rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15);
+        }
+        
+        body {
+            font-family: 'Google Sans', 'Roboto', Arial, sans-serif;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        
+        /* Header */
+        .header {
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 56px;
+        }
+        
+        .logo {
+            font-size: 20px;
+            font-weight: 400;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--accent-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .status-badge.working {
+            background: #e8f0fe;
+            color: var(--accent-blue);
+        }
+        
+        .status-badge.error {
+            background: #fce8e6;
+            color: var(--accent-red);
+        }
+        
+        /* Main Layout */
+        .main-layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        /* Left Sidebar */
+        .left-sidebar {
+            width: 280px;
+            background: var(--bg-primary);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        
+        .sidebar-section {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .sidebar-title {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: var(--accent-blue);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--accent-blue-hover);
+            box-shadow: var(--shadow);
+        }
+        
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--border-color);
+        }
+        
+        .notebook-item {
+            padding: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .notebook-item:hover {
+            background: var(--bg-secondary);
+        }
+        
+        .notebook-item.active {
+            background: #e8f0fe;
+            color: var(--accent-blue);
+        }
+        
+        .notebook-name {
+            font-size: 14px;
+            font-weight: 400;
+        }
+        
+        .delete-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 16px;
+            opacity: 0;
+            transition: opacity 0.2s;
+            padding: 4px;
+        }
+        
+        .notebook-item:hover .delete-btn {
+            opacity: 1;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+        
+        /* Middle - Chat Area */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-primary);
+            overflow: hidden;
+        }
+        
+        .chat-header {
+            padding: 12px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .chat-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        
+        .model-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .model-select {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 13px;
+            cursor: pointer;
+        }
+        
+        .model-select:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+        
+        .chat-message {
+            margin-bottom: 20px;
+            padding: 16px;
+            border-radius: 8px;
+            max-width: 85%;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .chat-message.user {
+            background: #e8f0fe;
+            color: var(--text-primary);
+            margin-left: auto;
+        }
+        
+        .chat-message.assistant {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+        
+        .message-role {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        
+        .chat-input-area {
+            padding: 20px 24px;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-primary);
+        }
+        
+        .folder-section {
+            margin-bottom: 16px;
+        }
+        
+        .folder-input {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .folder-input input {
+            flex: 1;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+            background: var(--bg-primary);
+        }
+        
+        .folder-input input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+        
+        .folder-input button {
+            padding: 10px 16px;
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .folder-input button:hover {
+            background: var(--accent-blue-hover);
+        }
+        
+        .prompt-section {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+        
+        .prompt-textarea {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            resize: none;
+            min-height: 80px;
+            background: var(--bg-primary);
+            font-family: inherit;
+        }
+        
+        .prompt-textarea:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+        
+        .dictation-btn {
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.2s;
+        }
+        
+        .dictation-btn:hover {
+            background: var(--bg-secondary);
+        }
+        
+        .dictation-btn.recording {
+            background: var(--accent-red);
+            border-color: var(--accent-red);
+            color: white;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        
+        .send-btn {
+            padding: 12px 24px;
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .send-btn:hover {
+            background: var(--accent-blue-hover);
+            box-shadow: var(--shadow);
+        }
+        
+        /* Right Sidebar - Code Preview */
+        .right-sidebar {
+            width: 400px;
+            background: var(--bg-primary);
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .code-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .code-title {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+        
+        .file-tabs {
+            display: flex;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            overflow-x: auto;
+        }
+        
+        .file-tab {
+            padding: 10px 16px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-right: 1px solid var(--border-color);
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+        
+        .file-tab:hover {
+            background: var(--bg-tertiary);
+        }
+        
+        .file-tab.active {
+            background: var(--bg-primary);
+            color: var(--accent-blue);
+            border-bottom: 2px solid var(--accent-blue);
+        }
+        
+        .file-tab .close-tab {
+            margin-left: 8px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .file-tab:hover .close-tab {
+            opacity: 1;
+        }
+        
+        .code-preview {
+            flex: 1;
+            overflow: auto;
+            padding: 16px;
+            font-family: 'Roboto Mono', 'Consolas', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            background: var(--bg-secondary);
+        }
+        
+        .code-line {
+            display: flex;
+            padding: 2px 0;
+        }
+        
+        .code-line-number {
+            width: 40px;
+            color: var(--text-muted);
+            text-align: right;
+            padding-right: 12px;
+            user-select: none;
+        }
+        
+        .code-line-content {
+            flex: 1;
+            color: var(--text-primary);
+        }
+        
+        .empty-code {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 6px;
+            border: 3px solid transparent;
+            background-clip: content-box;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+            background-clip: content-box;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">N</div>
+                NexCode
+            </div>
+            <div class="status-badge working" id="statusBadge">Chatbot working</div>
+        </div>
+        
+        <!-- Main Layout -->
+        <div class="main-layout">
+            <!-- Left Sidebar -->
+            <div class="left-sidebar">
+                <div class="sidebar-section">
+                    <button class="btn btn-primary" id="newNotebookBtn">
+                        <span>+</span> New Notebook
+                    </button>
+                </div>
+                
+                <div class="sidebar-section">
+                    <div class="sidebar-title">Notebooks</div>
+                    <div id="notebookList">
+                        <div class="empty-state">Loading...</div>
+                    </div>
+                </div>
+                
+                <div class="sidebar-section">
+                    <div class="sidebar-title">Settings</div>
+                    <div style="font-size: 13px; color: var(--text-secondary); padding: 8px 0;">
+                        <div>Max Tokens: 200,000</div>
+                        <div>API Provider: Gemini</div>
+                        <div>Theme: Light</div>
+                    </div>
+                </div>
+                
+                <div class="sidebar-section">
+                    <button class="btn btn-secondary" id="exportBtn">Export Code (.ZIP)</button>
+                    <button class="btn btn-secondary" id="syncGithubBtn">Sync GitHub</button>
+                </div>
+            </div>
+            
+            <!-- Chat Area -->
+            <div class="chat-area">
+                <div class="chat-header">
+                    <div class="chat-title">Chat</div>
+                    <div class="model-selector">
+                        <span style="font-size: 13px; color: var(--text-secondary);">Model:</span>
+                        <select class="model-select" id="modelSelect">
+                            <option value="openrouter">OpenRouter</option>
+                            <option value="groq">Groq</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="chat-messages" id="chatMessages">
+                    <div class="chat-message assistant">
+                        <div class="message-role">Assistant</div>
+                        Welcome to NexCode! Upload a folder or type your prompt below. Use the microphone button for voice input.
+                    </div>
+                </div>
+                
+                <div class="chat-input-area">
+                    <div class="folder-section">
+                        <div class="folder-input">
+                            <input type="text" id="folderInput" placeholder="Enter folder path or click browse...">
+                            <button id="browseFolderBtn">Browse</button>
+                        </div>
+                    </div>
+                    
+                    <div class="prompt-section">
+                        <textarea class="prompt-textarea" id="promptInput" placeholder="Type your message here... (Shift+Enter for new line)"></textarea>
+                        <button class="dictation-btn" id="dictationBtn" title="Click to start dictation">🎤</button>
+                        <button class="send-btn" id="sendBtn">Send</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Sidebar - Code Preview -->
+            <div class="right-sidebar">
+                <div class="code-header">
+                    <div class="code-title">Code Preview</div>
+                </div>
+                
+                <div class="file-tabs" id="fileTabs">
+                    <!-- File tabs will be added here -->
+                </div>
+                
+                <div class="code-preview" id="codePreview">
+                    <div class="empty-code">
+                        No files loaded. Upload a folder to view code.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/static/app.js"></script>
+</body>
+</html>
